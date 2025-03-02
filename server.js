@@ -206,25 +206,6 @@ app.post('/slack/commands', async (req, res) => {
     console.error('Error opening modal:', error);
     return res.status(500).send('Error opening modal');
   }
-    // Create and save the new accomplishment to MongoDB
-    const newAcc = new Accomplishment({
-      userId: user_id,
-      taggedUser,
-      challenge,
-    });
-    await newAcc.save();
-    console.log(`Stored accomplishment for ${user_id}:`, newAcc);
-    
-    // Public confirmation that logs the accomplishment
-    await slackClient.chat.postMessage({
-      channel: channel_id,
-      text: `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}!`,
-    });
-    return res.status(200).send();
-  } catch (error) {
-    console.error('Error recording accomplishment:', error);
-    return res.status(500).send('Error recording accomplishment');
-  }
 });
 
 // Handle options load for external select
