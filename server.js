@@ -67,7 +67,7 @@ app.post('/slack/commands', async (req, res) => {
   if (!parts[0].startsWith('@') || parts.length < 2) {
     await slackClient.chat.postMessage({
       channel: channel_id,
-      text: 'Invalid command! Use either:\n• `/bingo progress` to see your accomplishments\n• `/bingo @username Challenge description` to log an accomplishment',
+      text: 'Invalid command! Use either:\n• `/bingo @username Challenge description` to log an accomplishment\n• `/bingo progress` to see your accomplishments',
     });
     return res.status(200).send();
   }
