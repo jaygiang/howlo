@@ -94,7 +94,26 @@ app.get('/bingo/card', async (req, res) => {
       }
       html += `</tr>`;
     }
-    html += `</table></body></html>`;
+    html += `</table>`;
+
+    // Add accomplishments list below the card
+    html += `
+      <div style="margin: 20px auto; max-width: 800px;">
+        <h2 style="text-align: center;">Your Accomplishments</h2>
+        <ol style="line-height: 1.6;">
+    `;
+
+    // Sort accomplishments by timestamp in descending order
+    userAccomplishments.sort((a, b) => b.timestamp - a.timestamp);
+    
+    userAccomplishments.forEach(acc => {
+      html += `<li>${acc.challenge} (with ${acc.taggedUser}) - ${acc.timestamp.toLocaleDateString()}</li>`;
+    });
+
+    html += `
+        </ol>
+      </div>
+    </body></html>`;
     
     res.send(html);
   } catch (err) {
