@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { WebClient } = require('@slack/web-api');
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 // Connect to MongoDB using the connection string in your environment variable
 const mongoURI = process.env.MONGODB_URI;
@@ -15,6 +16,30 @@ const Accomplishment = require('./Accomplishment');
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Function to generate a secure token
+function generateToken(userId) {
+  const timestamp = Date.now();
+  const data = `${userId}-${timestamp}-${process.env.SECRET_KEY}`;
+  const hash = crypto.createHash('sha256').update(data).digest('hex');
+  return `${userId}.${timestamp}.${hash}`;
+}
+
+// Function to validate token
+function validateToken(token) {
+  const [userId, timestamp, hash] = token.split('.');
+  
+  // Check if token is expired (1 hour)
+  if (Date.now() - parseInt(timestamp) > 3600000) {
+    return null;
+  }
+  
+  // Verify hash
+  const data = `${userId}-${timestamp}-${process.env.SECRET_KEY}`;
+  const expectedHash = crypto.createHash('sha256').update(data).digest('hex');
+  
+  return hash === expectedHash ? userId : null;
+}
 
 // Initialize Slack Web API with your OAuth token
 const slackToken = process.env.SLACK_BOT_TOKEN;
@@ -56,9 +81,14 @@ app.get('/', (req, res) => {
 // GET route to display a visual bingo card for a user
 // Example: GET /bingo/card?user=U12345678
 app.get('/bingo/card', async (req, res) => {
-  const userId = req.query.user;
+  const token = req.query.token;
+  if (!token) {
+    return res.status(400).send("Missing token parameter.");
+  }
+  
+  const userId = validateToken(token);
   if (!userId) {
-    return res.status(400).send("Missing user query parameter.");
+    return res.status(401).send("Invalid or expired token.");
   }
   try {
     // Get user info from Slack
@@ -152,7 +182,8 @@ app.post('/slack/commands', async (req, res) => {
 
   // Handle progress command
   if (trimmedText.toLowerCase() === 'progress') {
-    const cardUrl = `${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/card?user=${user_id}`;
+    const token = generateToken(user_id);
+    const cardUrl = `${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/card?token=${token}`;
     try {
       await slackClient.chat.postEphemeral({
         channel: channel_id,
@@ -346,7 +377,7 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
         if (hasBingo) {
           await slackClient.chat.postMessage({
             channel: channel_id,
-            text: `🎉 *BINGO!* 🎉 <@${user_id}> has completed a line! View their card here: ${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/card?user=${user_id}`,
+            text: `🎉 *BINGO!* 🎉 <@${user_id}> has completed a line! View their card here: ${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/card?token=${generateToken(user_id)}`,
           });
         }
       }
