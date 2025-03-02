@@ -61,6 +61,10 @@ app.get('/bingo/card', async (req, res) => {
     return res.status(400).send("Missing user query parameter.");
   }
   try {
+    // Get user info from Slack
+    const userInfo = await slackClient.users.info({ user: userId });
+    const userName = userInfo.user.real_name.split(' ')[0]; // Get first name
+    
     // Get all accomplishments for this user
     const userAccomplishments = await Accomplishment.find({ userId }).exec();
     // Get a list of the accomplished challenge texts (trimmed)
@@ -69,7 +73,7 @@ app.get('/bingo/card', async (req, res) => {
     // Build a simple HTML table representing a 5x5 bingo card
     let html = `<html>
       <head>
-        <title>Your Bingo Card</title>
+        <title>${userName}'s Bingo Card</title>
         <style>
           table { border-collapse: collapse; margin: auto; }
           td { border: 1px solid #333; width: 150px; height: 100px; text-align: center; vertical-align: middle; padding: 5px; }
@@ -77,7 +81,7 @@ app.get('/bingo/card', async (req, res) => {
         </style>
       </head>
       <body>
-        <h1 style="text-align: center;">Your Bingo Card</h1>
+        <h1 style="text-align: center;">${userName}'s Bingo Card</h1>
         <table>`;
     
     for (let row = 0; row < 5; row++) {
