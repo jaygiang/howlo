@@ -34,7 +34,7 @@ app.post('/slack/commands', async (req, res) => {
 
   const trimmedText = text.trim();
 
-  // Check if the command is to view progress
+  // Handle progress command
   if (trimmedText.toLowerCase() === 'progress') {
     try {
       const userAccomplishments = await Accomplishment.find({ userId: user_id }).sort({ timestamp: -1 });
@@ -60,28 +60,19 @@ app.post('/slack/commands', async (req, res) => {
     }
   }
 
-  // For logging a new accomplishment, expecting the format: "@username Challenge description"
+  // Handle accomplishment command
   const parts = trimmedText.split(' ');
   
-  // If the command text does not include at least two parts, consider it an unknown command
-  if (parts.length < 2) {
-    const message = 'Unrecognized command. Please use one of the following:\n' +
-                    '- To check your progress, type: `progress`\n' +
-                    '- To record an accomplishment, type: `@username Challenge description`';
-    try {
-      await slackClient.chat.postMessage({
-        channel: channel_id,
-        text: message,
-      });
-      return res.status(200).send();
-    } catch (error) {
-      console.error('Error posting unknown command message:', error);
-      return res.status(500).send('Error posting unknown command message');
-    }
+  // Validate exact format: "@username challenge"
+  if (!parts[0].startsWith('@') || parts.length < 2) {
+    await slackClient.chat.postMessage({
+      channel: channel_id,
+      text: 'Invalid command! Use either:\n• `/bingo progress` to see your accomplishments\n• `/bingo @username Challenge description` to log an accomplishment',
+    });
+    return res.status(200).send();
   }
-  
-  // Otherwise, process the accomplishment command
-  const taggedUser = parts[0]; // e.g., "@username"
+
+  const taggedUser = parts[0];
   const challenge = parts.slice(1).join(' ');
 
   try {
