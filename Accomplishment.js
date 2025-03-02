@@ -5,6 +5,8 @@ const accomplishmentSchema = new mongoose.Schema({
   taggedUser: { type: String, required: true },
   challenge: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
+  bingoAchieved: { type: Boolean, default: false },
+  bingoTimestamp: { type: Date },
 });
 
 module.exports = mongoose.model('Accomplishment', accomplishmentSchema);

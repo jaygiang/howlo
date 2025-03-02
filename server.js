@@ -180,8 +180,59 @@ app.post('/slack/commands', async (req, res) => {
   const { user_id, text, channel_id, trigger_id } = req.body;
   const trimmedText = text.trim();
 
-  // Handle progress command
-  if (trimmedText.toLowerCase() === 'progress') {
+  // Handle progress or leaderboard commands
+  if (trimmedText.toLowerCase() === 'leaderboard') {
+    try {
+      // Get all accomplishments with bingos
+      const bingoWinners = await Accomplishment.aggregate([
+        { $match: { bingoAchieved: true } },
+        { 
+          $group: {
+            _id: { 
+              userId: "$userId",
+              month: { $month: "$bingoTimestamp" },
+              year: { $year: "$bingoTimestamp" }
+            },
+            firstBingoDate: { $min: "$bingoTimestamp" }
+          }
+        },
+        { $sort: { "firstBingoDate": -1 } },
+        { $limit: 10 }
+      ]);
+
+      if (bingoWinners.length === 0) {
+        await slackClient.chat.postEphemeral({
+          channel: channel_id,
+          user: user_id,
+          text: "No bingos achieved yet! Be the first to complete a line! 🎯"
+        });
+        return res.status(200).send();
+      }
+
+      // Get user info for all winners
+      const userPromises = bingoWinners.map(winner => 
+        slackClient.users.info({ user: winner._id.userId })
+      );
+      const userInfos = await Promise.all(userPromises);
+
+      let message = "*🏆 Bingo Leaderboard 🏆*\n\n";
+      bingoWinners.forEach((winner, index) => {
+        const userInfo = userInfos[index].user;
+        const date = new Date(winner.firstBingoDate);
+        message += `${index + 1}. <@${winner._id.userId}> (${date.toLocaleDateString()} - ${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()})\n`;
+      });
+
+      await slackClient.chat.postEphemeral({
+        channel: channel_id,
+        user: user_id,
+        text: message
+      });
+      return res.status(200).send();
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      return res.status(500).send('Error fetching leaderboard');
+    }
+  } else if (trimmedText.toLowerCase() === 'progress') {
     const token = generateToken(user_id);
     const cardUrl = `${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/card?token=${token}`;
     try {
@@ -373,8 +424,14 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
           text: `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}!`,
         });
         
-        // If bingo achieved, post celebration message
+        // If bingo achieved, update record and post celebration message
         if (hasBingo) {
+          // Update the accomplishment to mark the bingo
+          await Accomplishment.findByIdAndUpdate(newAcc._id, {
+            bingoAchieved: true,
+            bingoTimestamp: new Date()
+          });
+
           await slackClient.chat.postMessage({
             channel: channel_id,
             text: `🎉 *BINGO!* 🎉 <@${user_id}> has completed a line! View their card here: ${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/card?token=${generateToken(user_id)}`,
