@@ -456,7 +456,6 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
           });
         }
       }
-      console.log('test')
       // Return a clear response to close the modal
       return res.status(200).json({ response_action: "clear" });
     } catch (error) {
