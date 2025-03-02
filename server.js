@@ -125,7 +125,6 @@ app.get('/bingo/card', async (req, res) => {
 // Slash command endpoint for /bingo
 app.post('/slack/commands', async (req, res) => {
   const { user_id, text, channel_id, trigger_id } = req.body;
-  console.log('Received slash command:', req.body);
   const trimmedText = text.trim();
 
   // Handle progress command
@@ -220,8 +219,6 @@ app.post('/slack/commands', async (req, res) => {
 // Handle modal submissions
 // Use urlencoded middleware to parse the payload (Slack sends it as x-www-form-urlencoded)
 app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async (req, res) => {
-  console.log('Received interaction payload:', req.body);
-  
   if (!req.body.payload) {
     console.error('No payload received in interaction');
     return res.status(400).send('No payload received');
@@ -278,7 +275,6 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
           text: `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}!`,
         });
       } else {
-        console.warn('Channel ID not available. Skipping public message.');
       }
       
       // Return a clear response to close the modal
