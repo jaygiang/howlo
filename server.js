@@ -124,11 +124,11 @@ app.get('/bingo/card', async (req, res) => {
 
 // Slash command endpoint for /bingo
 app.post('/slack/commands', async (req, res) => {
-  const { user_id, text, channel_id } = req.body;
+  const { user_id, text, channel_id, trigger_id } = req.body;
   console.log('Received slash command:', req.body);
   const trimmedText = text.trim();
 
-  // If the command text is "progress", provide the user with a link to view their visual card (ephemerally)
+  // Handle progress command
   if (trimmedText.toLowerCase() === 'progress') {
     const cardUrl = `${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/card?user=${user_id}`;
     try {
@@ -144,20 +144,68 @@ app.post('/slack/commands', async (req, res) => {
     }
   }
 
-  // For logging a new accomplishment, expecting the format: "@username Challenge description"
-  const parts = trimmedText.split(' ');
-  if (!parts[0].startsWith('@') || parts.length < 2) {
-    await slackClient.chat.postMessage({
-      channel: channel_id,
-      text: 'Invalid command! Use either:\n• `/bingo @username Challenge description` to log an accomplishment\n• `/bingo progress` to see your Bingo Card',
+  // Open modal for new accomplishment
+  try {
+    await slackClient.views.open({
+      trigger_id,
+      view: {
+        type: "modal",
+        callback_id: "bingo_accomplishment",
+        private_metadata: channel_id,
+        title: {
+          type: "plain_text",
+          text: "Record Accomplishment"
+        },
+        submit: {
+          type: "plain_text",
+          text: "Submit"
+        },
+        close: {
+          type: "plain_text",
+          text: "Cancel"
+        },
+        blocks: [
+          {
+            type: "input",
+            block_id: "challenge_block",
+            label: {
+              type: "plain_text",
+              text: "Choose a challenge"
+            },
+            element: {
+              type: "external_select",
+              action_id: "challenge_select",
+              placeholder: {
+                type: "plain_text",
+                text: "Start typing a challenge..."
+              },
+              min_query_length: 1
+            }
+          },
+          {
+            type: "input",
+            block_id: "tag_block",
+            label: {
+              type: "plain_text",
+              text: "Tag someone (e.g., @username)"
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "tag_input",
+              placeholder: {
+                type: "plain_text",
+                text: "@username"
+              }
+            }
+          }
+        ]
+      }
     });
     return res.status(200).send();
+  } catch (error) {
+    console.error('Error opening modal:', error);
+    return res.status(500).send('Error opening modal');
   }
-  
-  const taggedUser = parts[0];
-  const challenge = parts.slice(1).join(' ');
-
-  try {
     // Create and save the new accomplishment to MongoDB
     const newAcc = new Accomplishment({
       userId: user_id,
@@ -177,6 +225,70 @@ app.post('/slack/commands', async (req, res) => {
     console.error('Error recording accomplishment:', error);
     return res.status(500).send('Error recording accomplishment');
   }
+});
+
+// Handle options load for external select
+app.post('/slack/options', express.json(), (req, res) => {
+  const payload = JSON.parse(req.body.payload);
+  const query = payload.value?.toLowerCase() || "";
+
+  const filteredOptions = bingoCard
+    .filter(challenge => 
+      challenge.toLowerCase().includes(query) && 
+      challenge !== "FREE"
+    )
+    .map(challenge => ({
+      text: {
+        type: "plain_text",
+        text: challenge
+      },
+      value: challenge
+    }));
+
+  return res.json({ options: filteredOptions });
+});
+
+// Handle modal submissions
+app.post('/slack/interactions', express.json(), async (req, res) => {
+  const payload = JSON.parse(req.body.payload);
+  
+  if (payload.type === "view_submission" && payload.view.callback_id === "bingo_accomplishment") {
+    const user_id = payload.user.id;
+    const channel_id = payload.view.private_metadata;
+    
+    const challenge = payload.view.state.values.challenge_block.challenge_select.selected_option.value;
+    const taggedUser = payload.view.state.values.tag_block.tag_input.value;
+
+    if (!taggedUser.startsWith('@')) {
+      return res.json({
+        response_action: "errors",
+        errors: {
+          tag_block: "Must start with @ symbol"
+        }
+      });
+    }
+
+    try {
+      const newAcc = new Accomplishment({
+        userId: user_id,
+        taggedUser,
+        challenge,
+      });
+      await newAcc.save();
+      
+      await slackClient.chat.postMessage({
+        channel: channel_id,
+        text: `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}!`,
+      });
+
+      return res.json({ response_action: "clear" });
+    } catch (error) {
+      console.error('Error recording accomplishment:', error);
+      return res.status(500).send('Error recording accomplishment');
+    }
+  }
+  
+  res.status(200).send();
 });
 
 const PORT = process.env.PORT || 3000;
