@@ -25,15 +25,19 @@ app.post('/slack/commands', async (req, res) => {
 
   // Check if the command is a request for the leaderboard
   if (text.trim().toLowerCase() === 'leaderboard') {
-    // Aggregate accomplishments per user
-    const leaderboard = Object.entries(accomplishments).map(([uid, entries]) => ({
-      uid,
-      count: entries.length,
-    })).sort((a, b) => b.count - a.count);
-
     let message = '*Bingo Leaderboard:*\n';
-    leaderboard.forEach((entry, index) => {
-      message += `${index + 1}. <@${entry.uid}> - ${entry.count} accomplishments\n`;
+    
+    // Sort users by number of accomplishments
+    const sortedUsers = Object.entries(accomplishments)
+      .sort(([, a], [, b]) => b.length - a.length);
+
+    sortedUsers.forEach(([uid, entries], index) => {
+      message += `${index + 1}. <@${uid}> - ${entries.length} accomplishments\n`;
+      // Add details for each accomplishment
+      entries.forEach((acc, i) => {
+        message += `   • ${acc.challenge} (with ${acc.taggedUser}) - ${new Date(acc.timestamp).toLocaleDateString()}\n`;
+      });
+      message += '\n';
     });
 
     // Respond with the leaderboard as a public message
