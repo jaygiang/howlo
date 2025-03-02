@@ -346,7 +346,7 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
         if (hasBingo) {
           await slackClient.chat.postMessage({
             channel: channel_id,
-            text: `🎉 *BINGO!* 🎉 <@${user_id}> has completed a line! Check their card with \`/bingo progress\` to see it!`,
+            text: `🎉 *BINGO!* 🎉 <@${user_id}> has completed a line! View their card here: ${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/card?user=${user_id}`,
           });
         }
       }
