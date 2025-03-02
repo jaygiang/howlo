@@ -173,13 +173,21 @@ app.post('/slack/commands', async (req, res) => {
               text: "Choose a challenge"
             },
             element: {
-              type: "external_select",
+              type: "static_select",
               action_id: "challenge_select",
               placeholder: {
                 type: "plain_text",
-                text: "Start typing a challenge..."
+                text: "Select a challenge..."
               },
-              min_query_length: 1
+              options: bingoCard
+                .filter(challenge => challenge !== "FREE")
+                .map(challenge => ({
+                  text: {
+                    type: "plain_text",
+                    text: challenge
+                  },
+                  value: challenge
+                }))
             }
           },
           {
@@ -208,26 +216,6 @@ app.post('/slack/commands', async (req, res) => {
   }
 });
 
-// Handle options load for external select
-app.post('/slack/options', express.json(), (req, res) => {
-  const payload = JSON.parse(req.body.payload);
-  const query = payload.value?.toLowerCase() || "";
-
-  const filteredOptions = bingoCard
-    .filter(challenge => 
-      challenge.toLowerCase().includes(query) && 
-      challenge !== "FREE"
-    )
-    .map(challenge => ({
-      text: {
-        type: "plain_text",
-        text: challenge
-      },
-      value: challenge
-    }));
-
-  return res.json({ options: filteredOptions });
-});
 
 // Handle modal submissions
 app.post('/slack/interactions', express.json(), async (req, res) => {
