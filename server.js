@@ -23,9 +23,9 @@ app.post('/slack/commands', async (req, res) => {
   const { user_id, text, channel_id } = req.body;
   console.log('Received slash command:', req.body);
 
-  // Check if the command is a request for the leaderboard
-  if (text.trim().toLowerCase() === 'leaderboard') {
-    let message = '*Your Bingo Accomplishments:*\n';
+  // Check if the command is a request for progress
+  if (text.trim().toLowerCase() === 'progress') {
+    let message = '*Your Bingo Progress:*\n';
     
     const userAccomplishments = accomplishments[user_id] || [];
     
