@@ -219,7 +219,20 @@ app.post('/slack/commands', async (req, res) => {
 
 // Handle modal submissions
 app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async (req, res) => {
-  const payload = JSON.parse(req.body.payload);
+  console.log('Received interaction payload:', req.body);
+  
+  if (!req.body.payload) {
+    console.error('No payload received in interaction');
+    return res.status(400).send('No payload received');
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(req.body.payload);
+  } catch (error) {
+    console.error('Error parsing payload:', error, req.body);
+    return res.status(400).send('Invalid payload');
+  }
   
   if (payload.type === "view_submission" && payload.view.callback_id === "bingo_accomplishment") {
     const user_id = payload.user.id;
@@ -250,10 +263,16 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
         text: `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}!`,
       });
 
-      return res.json({ response_action: "clear" });
+      return res.status(200).json({ response_action: "clear" });
     } catch (error) {
       console.error('Error recording accomplishment:', error);
-      return res.status(500).send('Error recording accomplishment');
+      console.error('Payload that caused error:', payload);
+      return res.status(500).json({ 
+        response_action: "errors",
+        errors: {
+          challenge_block: "Failed to save accomplishment. Please try again."
+        }
+      });
     }
   }
   
