@@ -67,8 +67,22 @@ app.get('/bingo/card', async (req, res) => {
     
     // Get all accomplishments for this user
     const userAccomplishments = await Accomplishment.find({ userId }).exec();
-    // Get a list of the accomplished challenge texts (trimmed)
-    const accomplishedChallenges = userAccomplishments.map(a => a.challenge.trim());
+    
+    // Create a 5x5 grid representation of completed challenges
+    const grid = Array(5).fill().map(() => Array(5).fill(false));
+    userAccomplishments.forEach(acc => {
+      const index = bingoCard.indexOf(acc.challenge.trim());
+      if (index !== -1) {
+        const row = Math.floor(index / 5);
+        const col = index % 5;
+        grid[row][col] = true;
+      }
+    });
+    // Mark FREE space as completed
+    const freeIndex = bingoCard.indexOf("FREE");
+    if (freeIndex !== -1) {
+      grid[Math.floor(freeIndex / 5)][freeIndex % 5] = true;
+    }
     
     // Build a simple HTML table representing a 5x5 bingo card
     let html = `<html>
@@ -277,13 +291,64 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
       });
       await newAcc.save();
       
-      // Only attempt to post a public message if channel_id is available.
+      // Get all accomplishments to check for bingo
+      const userAccomplishments = await Accomplishment.find({ userId: user_id }).exec();
+      
+      // Create grid representation
+      const grid = Array(5).fill().map(() => Array(5).fill(false));
+      userAccomplishments.forEach(acc => {
+        const index = bingoCard.indexOf(acc.challenge.trim());
+        if (index !== -1) {
+          const row = Math.floor(index / 5);
+          const col = index % 5;
+          grid[row][col] = true;
+        }
+      });
+      // Mark FREE space
+      const freeIndex = bingoCard.indexOf("FREE");
+      if (freeIndex !== -1) {
+        grid[Math.floor(freeIndex / 5)][freeIndex % 5] = true;
+      }
+
+      // Check for bingo
+      let hasBingo = false;
+      
+      // Check rows
+      hasBingo = hasBingo || grid.some(row => row.every(cell => cell));
+      
+      // Check columns
+      for (let col = 0; col < 5; col++) {
+        if (grid.every(row => row[col])) {
+          hasBingo = true;
+          break;
+        }
+      }
+      
+      // Check diagonals
+      if (!hasBingo) {
+        // Top-left to bottom-right
+        hasBingo = [0,1,2,3,4].every(i => grid[i][i]);
+        // Top-right to bottom-left
+        if (!hasBingo) {
+          hasBingo = [0,1,2,3,4].every(i => grid[i][4-i]);
+        }
+      }
+
+      // Only attempt to post messages if channel_id is available
       if (channel_id) {
+        // Post accomplishment message
         await slackClient.chat.postMessage({
           channel: channel_id,
           text: `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}!`,
         });
-      } else {
+        
+        // If bingo achieved, post celebration message
+        if (hasBingo) {
+          await slackClient.chat.postMessage({
+            channel: channel_id,
+            text: `🎉 *BINGO!* 🎉 <@${user_id}> has completed a line! Check their card with \`/bingo progress\` to see it!`,
+          });
+        }
       }
       
       // Return a clear response to close the modal
