@@ -218,6 +218,7 @@ app.post('/slack/commands', async (req, res) => {
 
 
 // Handle modal submissions
+// Use urlencoded middleware to parse the payload (Slack sends it as x-www-form-urlencoded)
 app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async (req, res) => {
   console.log('Received interaction payload:', req.body);
   
@@ -236,11 +237,23 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
   
   if (payload.type === "view_submission" && payload.view.callback_id === "bingo_accomplishment") {
     const user_id = payload.user.id;
-    const channel_id = payload.view.private_metadata;
+    // Ensure that private_metadata is set when opening the modal.
+    const channel_id = payload.view.private_metadata; 
+    if (!channel_id) {
+      console.error('Missing private_metadata (channel_id) in payload.');
+    }
     
-    const challenge = payload.view.state.values.challenge_block.challenge_select.selected_option.value;
-    const taggedUser = payload.view.state.values.tag_block.tag_input.value;
-
+    // Retrieve values from modal state
+    let challenge, taggedUser;
+    try {
+      challenge = payload.view.state.values.challenge_block.challenge_select.selected_option.value;
+      taggedUser = payload.view.state.values.tag_block.tag_input.value;
+    } catch (err) {
+      console.error('Error retrieving values from modal state:', err, payload.view.state);
+      return res.status(400).send('Error retrieving input values');
+    }
+    
+    // Validate taggedUser format
     if (!taggedUser.startsWith('@')) {
       return res.json({
         response_action: "errors",
@@ -258,11 +271,17 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
       });
       await newAcc.save();
       
-      await slackClient.chat.postMessage({
-        channel: channel_id,
-        text: `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}!`,
-      });
-
+      // Only attempt to post a public message if channel_id is available.
+      if (channel_id) {
+        await slackClient.chat.postMessage({
+          channel: channel_id,
+          text: `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}!`,
+        });
+      } else {
+        console.warn('Channel ID not available. Skipping public message.');
+      }
+      
+      // Return a clear response to close the modal
       return res.status(200).json({ response_action: "clear" });
     } catch (error) {
       console.error('Error recording accomplishment:', error);
@@ -276,8 +295,10 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
     }
   }
   
+  // For other interaction types, send a basic 200 response
   res.status(200).send();
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
