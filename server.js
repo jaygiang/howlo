@@ -2,6 +2,19 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const { WebClient } = require('@slack/web-api');
+const mongoose = require('mongoose');
+
+// Connect to MongoDB using the connection string in your environment variable
+const mongoURI = process.env.MONGODB_URI;
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Import the Accomplishment model (ensure you have defined this in Accomplishment.js)
+const Accomplishment = require('./Accomplishment');
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -9,10 +22,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Initialize Slack Web API with your OAuth token
 const slackToken = process.env.SLACK_BOT_TOKEN;
 const slackClient = new WebClient(slackToken);
-
-// In-memory storage for accomplishments
-// Structure: { userId: [ { challenge, taggedUser, timestamp }, ... ] }
-const accomplishments = {};
 
 app.get('/', (req, res) => {
   res.send('Server is running!');
@@ -23,22 +32,42 @@ app.post('/slack/commands', async (req, res) => {
   const { user_id, text, channel_id } = req.body;
   console.log('Received slash command:', req.body);
 
-  // Check if the command is a request for progress
-  if (text.trim().toLowerCase() === 'progress') {
-    let message = '*Your Bingo Progress:*\n';
-    
-    const userAccomplishments = accomplishments[user_id] || [];
-    
-    if (userAccomplishments.length === 0) {
-      message += "You haven't recorded any accomplishments yet!";
-    } else {
-      message += `You have ${userAccomplishments.length} accomplishment(s):\n\n`;
-      userAccomplishments.forEach((acc, i) => {
-        message += `${i + 1}. ${acc.challenge} (with ${acc.taggedUser}) - ${new Date(acc.timestamp).toLocaleDateString()}\n`;
-      });
-    }
+  const trimmedText = text.trim();
 
-    // Respond with the leaderboard as a public message
+  // Check if the command is to view progress
+  if (trimmedText.toLowerCase() === 'progress') {
+    try {
+      const userAccomplishments = await Accomplishment.find({ userId: user_id }).sort({ timestamp: -1 });
+      let message = '*Your Bingo Progress:*\n';
+
+      if (userAccomplishments.length === 0) {
+        message += "You haven't recorded any accomplishments yet!";
+      } else {
+        message += `You have ${userAccomplishments.length} accomplishment(s):\n\n`;
+        userAccomplishments.forEach((acc, i) => {
+          message += `${i + 1}. ${acc.challenge} (with ${acc.taggedUser}) - ${acc.timestamp.toLocaleDateString()}\n`;
+        });
+      }
+      
+      await slackClient.chat.postMessage({
+        channel: channel_id,
+        text: message,
+      });
+      return res.status(200).send();
+    } catch (error) {
+      console.error('Error retrieving progress:', error);
+      return res.status(500).send('Error retrieving progress');
+    }
+  }
+
+  // For logging a new accomplishment, expecting the format: "@username Challenge description"
+  const parts = trimmedText.split(' ');
+  
+  // If the command text does not include at least two parts, consider it an unknown command
+  if (parts.length < 2) {
+    const message = 'Unrecognized command. Please use one of the following:\n' +
+                    '- To check your progress, type: `progress`\n' +
+                    '- To record an accomplishment, type: `@username Challenge description`';
     try {
       await slackClient.chat.postMessage({
         channel: channel_id,
@@ -46,42 +75,35 @@ app.post('/slack/commands', async (req, res) => {
       });
       return res.status(200).send();
     } catch (error) {
-      console.error('Error posting leaderboard message:', error);
-      return res.status(500).send('Error posting leaderboard message');
+      console.error('Error posting unknown command message:', error);
+      return res.status(500).send('Error posting unknown command message');
     }
   }
-
-  // Otherwise, log a new accomplishment
-  // Expecting input format like: "@username Challenge description"
-  // For a simple MVP, we take the first word as the tagged user and the rest as the challenge description.
-  const parts = text.trim().split(' ');
-  const taggedUser = parts[0]; // e.g., "@username" or a challenge ID reference
+  
+  // Otherwise, process the accomplishment command
+  const taggedUser = parts[0]; // e.g., "@username"
   const challenge = parts.slice(1).join(' ');
 
-  // Initialize the array for the user if not already set
-  if (!accomplishments[user_id]) {
-    accomplishments[user_id] = [];
-  }
-
-  // Save the accomplishment with a timestamp
-  accomplishments[user_id].push({
-    taggedUser,
-    challenge,
-    timestamp: new Date().toISOString(),
-  });
-
-  console.log(`Stored accomplishment for ${user_id}:`, accomplishments[user_id]);
-
-  // Send a confirmation message back to the channel
   try {
+    // Create and save the new accomplishment to MongoDB
+    const newAcc = new Accomplishment({
+      userId: user_id,
+      taggedUser,
+      challenge,
+    });
+    await newAcc.save();
+    
+    console.log(`Stored accomplishment for ${user_id}:`, newAcc);
+    
+    // Send a confirmation message back to the channel
     await slackClient.chat.postMessage({
       channel: channel_id,
       text: `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}!`,
     });
-    res.status(200).send();
+    return res.status(200).send();
   } catch (error) {
-    console.error('Error posting confirmation message:', error);
-    res.status(500).send('Error posting confirmation message');
+    console.error('Error recording accomplishment:', error);
+    return res.status(500).send('Error recording accomplishment');
   }
 });
 
