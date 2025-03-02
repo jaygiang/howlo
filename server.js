@@ -218,7 +218,7 @@ app.post('/slack/commands', async (req, res) => {
 
 
 // Handle modal submissions
-app.post('/slack/interactions', express.json(), async (req, res) => {
+app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async (req, res) => {
   const payload = JSON.parse(req.body.payload);
   
   if (payload.type === "view_submission" && payload.view.callback_id === "bingo_accomplishment") {
