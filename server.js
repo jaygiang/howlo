@@ -89,11 +89,16 @@ app.get('/bingo/card', async (req, res) => {
       for (let col = 0; col < 5; col++) {
         const index = row * 5 + col;
         const challenge = bingoCard[index];
-        // Mark the cell if it is "FREE" or if the challenge is in the accomplished list
-        let isChecked = (challenge === "FREE") || (accomplishedChallenges.includes(challenge));
+        // Find the accomplishment for this challenge if it exists
+        const accomplishment = userAccomplishments.find(a => a.challenge.trim() === challenge);
+        let isChecked = (challenge === "FREE") || accomplishment;
+        
         html += `<td class="${isChecked ? 'checked' : ''}">
                   <div>${challenge}</div>
-                  ${isChecked ? '<div style="color: green; font-size: 24px;">&#10004;</div>' : ''}
+                  ${isChecked ? `
+                    <div style="color: green; font-size: 24px;">&#10004;</div>
+                    ${accomplishment ? `<div style="color: #666; font-size: 12px;">${accomplishment.taggedUser}</div>` : ''}
+                  ` : ''}
                  </td>`;
       }
       html += `</tr>`;
