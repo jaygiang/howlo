@@ -136,10 +136,74 @@ app.get('/bingo/card', async (req, res) => {
     let html = `<html>
       <head>
         <title>${userName}'s Bingo Card</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
-          table { border-collapse: collapse; margin: auto; }
-          td { border: 1px solid #333; width: 150px; height: 100px; text-align: center; vertical-align: middle; padding: 5px; }
-          .checked { background-color: #c8e6c9; }
+          body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+          }
+          table { 
+            border-collapse: separate; 
+            border-spacing: 12px;
+            margin: 40px auto;
+            max-width: 1200px;
+          }
+          td { 
+            border-radius: 12px;
+            width: 180px;
+            height: 120px;
+            text-align: center;
+            vertical-align: middle;
+            padding: 15px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            font-size: 14px;
+          }
+          td:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+          }
+          .checked { 
+            background-color: #e8f5e9;
+            border: 2px solid #81c784;
+          }
+          h1 {
+            color: #2e7d32;
+            font-weight: 600;
+            margin: 40px 0;
+          }
+          .accomplishment-list {
+            margin: 40px auto;
+            max-width: 800px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          .accomplishment-list h2 {
+            color: #2e7d32;
+            margin-bottom: 20px;
+          }
+          .accomplishment-list li {
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            background: #f8f9fa;
+            font-size: 16px;
+          }
+          .check-mark {
+            color: #2e7d32;
+            font-size: 24px;
+            margin: 8px 0;
+          }
+          .tagged-user {
+            color: #666;
+            font-size: 12px;
+            margin-top: 4px;
+          }
         </style>
       </head>
       <body>
@@ -158,8 +222,8 @@ app.get('/bingo/card', async (req, res) => {
         html += `<td class="${isChecked ? 'checked' : ''}">
                   <div>${challenge}</div>
                   ${isChecked ? `
-                    <div style="color: green; font-size: 24px;">&#10004;</div>
-                    ${accomplishment ? `<div style="color: #666; font-size: 12px;">${accomplishment.taggedUser}</div>` : ''}
+                    <div class="check-mark">&#10004;</div>
+                    ${accomplishment ? `<div class="tagged-user">${accomplishment.taggedUser}</div>` : ''}
                   ` : ''}
                  </td>`;
       }
@@ -169,9 +233,9 @@ app.get('/bingo/card', async (req, res) => {
 
     // Add accomplishments list below the card
     html += `
-      <div style="margin: 20px auto; max-width: 800px;">
+      <div class="accomplishment-list">
         <h2 style="text-align: center;">Your Accomplishments</h2>
-        <ol style="line-height: 1.6;">
+        <ol>
     `;
 
     // Sort accomplishments by timestamp in descending order
