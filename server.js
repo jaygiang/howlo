@@ -65,7 +65,7 @@ const slackClient = new WebClient(slackToken);
 
 // Define a fixed bingo card layout (25 items, center is "FREE")
 const bingoCard = [
-  "Introduce two people who haven’t met yet",
+  "Introduce two people who haven't met yet",
   "Schedule a follow-up coffee chat",
   "Find someone with a shared hobby and plan to do it together",
   "Share a personal story (non-work related)",
@@ -192,20 +192,22 @@ app.get('/bingo/card', async (req, res) => {
             padding: 16px;
             border-radius: 8px;
             background: #f8f9fa;
-            font-size: 16px;
+            font-size: 18px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
           }
           .accomplishment-label {
             color: #666;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
-            margin-right: 8px;
+            display: block;
+            margin-bottom: 4px;
           }
           .accomplishment-value {
             color: #333;
-            font-size: 15px;
+            font-size: 18px;
+            display: block;
           }
           .check-mark {
             color: #2e7d32;
@@ -265,9 +267,18 @@ app.get('/bingo/card', async (req, res) => {
     
     userAccomplishments.forEach(acc => {
       html += `<li>
-        <div><span class="accomplishment-label">Challenge:</span> <span class="accomplishment-value">${acc.challenge}</span></div>
-        <div><span class="accomplishment-label">With:</span> <span class="accomplishment-value">${acc.taggedUser}</span></div>
-        <div><span class="accomplishment-label">Date:</span> <span class="accomplishment-value">${acc.timestamp.toLocaleDateString()}</span></div>
+        <div>
+          <span class="accomplishment-label">Challenge:</span>
+          <span class="accomplishment-value">${acc.challenge}</span>
+        </div>
+        <div>
+          <span class="accomplishment-label">With:</span>
+          <span class="accomplishment-value">${acc.taggedUser}</span>
+        </div>
+        <div>
+          <span class="accomplishment-label">Date:</span>
+          <span class="accomplishment-value">${acc.timestamp.toLocaleDateString()}</span>
+        </div>
       </li>`;
     });
 
