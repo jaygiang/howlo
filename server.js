@@ -188,11 +188,24 @@ app.get('/bingo/card', async (req, res) => {
             margin-bottom: 20px;
           }
           .accomplishment-list li {
-            margin-bottom: 12px;
-            padding: 10px;
-            border-radius: 6px;
+            margin-bottom: 16px;
+            padding: 16px;
+            border-radius: 8px;
             background: #f8f9fa;
             font-size: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          .accomplishment-label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 8px;
+          }
+          .accomplishment-value {
+            color: #333;
+            font-size: 15px;
           }
           .check-mark {
             color: #2e7d32;
@@ -251,7 +264,11 @@ app.get('/bingo/card', async (req, res) => {
     userAccomplishments.sort((a, b) => b.timestamp - a.timestamp);
     
     userAccomplishments.forEach(acc => {
-      html += `<li><strong>${acc.challenge}</strong> (with <strong>${acc.taggedUser}</strong>) - ${acc.timestamp.toLocaleDateString()}</li>`;
+      html += `<li>
+        <div><span class="accomplishment-label">Challenge:</span> <span class="accomplishment-value">${acc.challenge}</span></div>
+        <div><span class="accomplishment-label">With:</span> <span class="accomplishment-value">${acc.taggedUser}</span></div>
+        <div><span class="accomplishment-label">Date:</span> <span class="accomplishment-value">${acc.timestamp.toLocaleDateString()}</span></div>
+      </li>`;
     });
 
     html += `
