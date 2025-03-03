@@ -111,7 +111,7 @@ app.get('/bingo/card', async (req, res) => {
   try {
     // Get user info from Slack
     const userInfo = await slackClient.users.info({ user: userId });
-    const userName = userInfo.user.real_name.split(' ')[0]; // Get first name
+    const userName = userInfo.user.real_name; // Get full name     
     
     // Get all accomplishments for this user
     const userAccomplishments = await Accomplishment.find({ userId }).exec();
@@ -135,7 +135,7 @@ app.get('/bingo/card', async (req, res) => {
     // Build a simple HTML table representing a 5x5 bingo card
     let html = `<html>
       <head>
-        <title>${userName}'s Bingo Card</title>
+        <title>${userName}</title>     
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
         <style>
           body {
@@ -208,14 +208,13 @@ app.get('/bingo/card', async (req, res) => {
       </head>
       <body>
         <h1 style="text-align: center;">${userName}'s Bingo Card</h1>
-        <table style="margin-bottom: 0;">
+        <table style="margin-bottom: 0; border-spacing: 12px;">
           <tr>
-            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">C</td>
-            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">O</td>
-            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">Y</td>
-            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">O</td>
-            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">T</td>
-            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">E</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">C</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">O</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">Y</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">O</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">T</td>
           </tr>
         </table>
         <table style="margin-top: 0;">`;
