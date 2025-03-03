@@ -210,15 +210,15 @@ app.get('/bingo/card', async (req, res) => {
         <h1 style="text-align: center;">${userName}'s Bingo Card</h1>
         <table style="margin-bottom: 0;">
           <tr>
-            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">C</td>
-            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">O</td>
-            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">Y</td>
-            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">O</td>
-            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">T</td>
-            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">E</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">C</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">O</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">Y</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">O</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">T</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold;">E</td>
           </tr>
         </table>
-        <table>`;
+        <table style="margin-top: 0;">`;
     
     for (let row = 0; row < 5; row++) {
       html += `<tr>`;
