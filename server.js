@@ -208,6 +208,16 @@ app.get('/bingo/card', async (req, res) => {
       </head>
       <body>
         <h1 style="text-align: center;">${userName}'s Bingo Card</h1>
+        <table style="margin-bottom: 0;">
+          <tr>
+            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">C</td>
+            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">O</td>
+            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">Y</td>
+            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">O</td>
+            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">T</td>
+            <td style="background: none; box-shadow: none; font-size: 24px; font-weight: bold;">E</td>
+          </tr>
+        </table>
         <table>`;
     
     for (let row = 0; row < 5; row++) {
