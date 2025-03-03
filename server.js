@@ -242,7 +242,7 @@ app.get('/bingo/card', async (req, res) => {
     userAccomplishments.sort((a, b) => b.timestamp - a.timestamp);
     
     userAccomplishments.forEach(acc => {
-      html += `<li>${acc.challenge} (with ${acc.taggedUser}) - ${acc.timestamp.toLocaleDateString()}</li>`;
+      html += `<li><strong>${acc.challenge}</strong> (with <strong>${acc.taggedUser}</strong>) - ${acc.timestamp.toLocaleDateString()}</li>`;
     });
 
     html += `
