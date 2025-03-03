@@ -192,21 +192,21 @@ app.get('/bingo/card', async (req, res) => {
             padding: 16px;
             border-radius: 8px;
             background: #f8f9fa;
-            font-size: 18px;
+            font-size: 20px;
             display: flex;
             flex-direction: column;
             gap: 10px;
           }
           .accomplishment-label {
             color: #666;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: normal;
             display: block;
             margin-bottom: 4px;
           }
           .accomplishment-value {
             color: #333;
-            font-size: 18px;
+            font-size: 20px;
             display: block;
           }
           .check-mark {
@@ -218,6 +218,17 @@ app.get('/bingo/card', async (req, res) => {
             color: #666;
             font-size: 12px;
             margin-top: 4px;
+          }
+          @media (max-width: 768px) {
+            .accomplishment-list li {
+              font-size: 22px;
+            }
+            .accomplishment-label {
+              font-size: 20px;
+            }
+            .accomplishment-value {
+              font-size: 22px;
+            }
           }
         </style>
       </head>
