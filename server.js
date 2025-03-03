@@ -111,7 +111,7 @@ app.get('/bingo/card', async (req, res) => {
   try {
     // Get user info from Slack
     const userInfo = await slackClient.users.info({ user: userId });
-    const userName = userInfo.user.real_name; // Get full name     
+    const userName = userInfo.user.real_name; // Get full name
     
     // Get all accomplishments for this user
     const userAccomplishments = await Accomplishment.find({ userId }).exec();
@@ -207,7 +207,7 @@ app.get('/bingo/card', async (req, res) => {
         </style>
       </head>
       <body>
-        <h1 style="text-align: center;">${userName}'s Bingo Card</h1>
+        <h2 style="text-align: center;">${userName}</h2>
         <table style="margin-bottom: 0; border-spacing: 12px;">
           <tr>
             <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">C</td>
