@@ -171,7 +171,7 @@ app.get('/bingo/card', async (req, res) => {
             border: 2px solid #81c784;
           }
           h1 {
-            color: #2e7d32;
+            color: #000000;
             font-weight: 600;
             margin: 40px 0;
           }
