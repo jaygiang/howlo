@@ -315,7 +315,7 @@ app.get('/bingo/card', async (req, res) => {
           </tr>
         </table>
         <table style="margin-top: 0;">`;
-    console.log('test')
+
     for (let row = 0; row < 5; row++) {
       html += `<tr>`;
       for (let col = 0; col < 5; col++) {
