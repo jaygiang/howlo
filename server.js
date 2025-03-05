@@ -34,6 +34,7 @@ const Accomplishment = require('./Accomplishment');
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('public')); // Serve static files from public directory
 
 // Function to generate a secure token
 function generateToken(userId) {
@@ -150,10 +151,13 @@ app.get('/bingo/card', async (req, res) => {
             margin: 40px auto;
             max-width: 1200px;
           }
+          tr {
+            height: 150px;
+          }
           td { 
             border-radius: 12px;
             width: 180px;
-            height: 120px;
+            height: 200px;
             text-align: center;
             vertical-align: middle;
             padding: 15px;
@@ -161,14 +165,75 @@ app.get('/bingo/card', async (req, res) => {
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             font-size: 14px;
+            position: relative;
+            overflow: hidden;
           }
           td:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
           }
           .checked { 
-            background-color: #e8f5e9;
-            border: 2px solid #81c784;
+            background-color: #D3D3D3;
+            border: 2px solid gray;
+            position: relative;
+          }
+          .checked::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            opacity: .9;
+            pointer-events: none;
+            z-index: 1;
+          }
+          .wolf-marker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease;
+            z-index: 2; /* Places the wolf image above the opacity overlay */
+          }
+          .wolf-image {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
+          }
+          td:hover .wolf-marker, 
+          td:active .wolf-marker {
+            opacity: 0;
+            pointer-events: none;
+          }
+          td.checked:hover::before,
+          td.checked:active::before {
+            opacity: 0;
+          }
+          @media (max-width: 768px) {
+            .td-content {
+              pointer-events: none;
+              position: relative;
+              z-index: 3; /* Places content above both wolf image and opacity overlay */
+            }
+            /* Add touch-specific behavior for mobile */
+            td:active .wolf-marker {
+              opacity: 0;
+            }
+            /* Make sure the tap works on mobile */
+            td {
+              cursor: pointer;
+              -webkit-tap-highlight-color: transparent;
+            }
+            /* Show cell content after tap */
+            td:active .td-content {
+              pointer-events: auto;
+            }
           }
           h1 {
             color: #000000;
@@ -219,6 +284,12 @@ app.get('/bingo/card', async (req, res) => {
             font-size: 12px;
             margin-top: 4px;
           }
+          .event-location {
+            color: #6a89cc;
+            font-size: 12px;
+            font-style: italic;
+            margin-top: 2px;
+          }
           @media (max-width: 768px) {
             .accomplishment-list li {
               font-size: 22px;
@@ -232,15 +303,15 @@ app.get('/bingo/card', async (req, res) => {
           }
         </style>
       </head>
-      <body>
-        <h2 style="text-align: center;">${userName}</h2>
+      <body style="margin-top: 35px;">
+        <h2 style="text-align: center;"> Hi, ${userName}!</h2>
         <table style="margin-bottom: 0; border-spacing: 12px;">
           <tr>
-            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">C</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">H</td>
             <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">O</td>
-            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">Y</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">W</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">L</td>
             <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">O</td>
-            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">T</td>
           </tr>
         </table>
         <table style="margin-top: 0;">`;
@@ -255,11 +326,21 @@ app.get('/bingo/card', async (req, res) => {
         let isChecked = (challenge === "FREE") || accomplishment;
         
         html += `<td class="${isChecked ? 'checked' : ''}">
-                  <div>${challenge}</div>
                   ${isChecked ? `
-                    <div class="check-mark">&#10004;</div>
-                    ${accomplishment ? `<div class="tagged-user">${accomplishment.taggedUser}</div>` : ''}
+                    <div class="wolf-marker">
+                      <img src="/images/coyote.png" class="wolf-image" alt="Wolf">
+                    </div>
                   ` : ''}
+                  <div class="td-content">
+                    <div>${challenge}</div>
+                    ${isChecked ? `
+                      <div class="check-mark">&#10004;</div>
+                      ${accomplishment ? `
+                        <div class="tagged-user">${accomplishment.taggedUser}</div>
+                        ${accomplishment.eventLocation ? `<div class="event-location">${accomplishment.eventLocation}</div>` : ''}
+                      ` : ''}
+                    ` : ''}
+                  </div>
                  </td>`;
       }
       html += `</tr>`;
@@ -286,6 +367,12 @@ app.get('/bingo/card', async (req, res) => {
           <span class="accomplishment-label">With:</span>
           <span class="accomplishment-value">${acc.taggedUser}</span>
         </div>
+        ${acc.eventLocation ? `
+        <div>
+          <span class="accomplishment-label">Where:</span>
+          <span class="accomplishment-value">${acc.eventLocation}</span>
+        </div>
+        ` : ''}
         <div>
           <span class="accomplishment-label">Date:</span>
           <span class="accomplishment-value">${acc.timestamp.toLocaleDateString()}</span>
@@ -439,6 +526,22 @@ app.post('/slack/commands', async (req, res) => {
                 text: "@username"
               }
             }
+          },
+          {
+            type: "input",
+            block_id: "event_location_block",
+            label: {
+              type: "plain_text",
+              text: "Event or Location *"
+            },
+            element: {
+              type: "plain_text_input",
+              action_id: "event_location_input",
+              placeholder: {
+                type: "plain_text",
+                text: "Where did this happen? (e.g., SD Startup Week, Coffee Chat, etc.)"
+              }
+            }
           }
         ]
       }
@@ -476,10 +579,17 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
     }
     
     // Retrieve values from modal state
-    let challenge, taggedUser;
+    let challenge, taggedUser, eventLocation;
     try {
       challenge = payload.view.state.values.challenge_block.challenge_select.selected_option.value;
       taggedUser = payload.view.state.values.tag_block.tag_input.value;
+      
+      // Get eventLocation if it exists (it's optional)
+      eventLocation = '';
+      if (payload.view.state.values.event_location_block && 
+          payload.view.state.values.event_location_block.event_location_input) {
+        eventLocation = payload.view.state.values.event_location_block.event_location_input.value || '';
+      }
     } catch (err) {
       console.error('Error retrieving values from modal state:', err, payload.view.state);
       return res.status(400).send('Error retrieving input values');
@@ -494,12 +604,23 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
         }
       });
     }
+    
+    // Validate eventLocation is not empty
+    if (!eventLocation || eventLocation.trim() === '') {
+      return res.json({
+        response_action: "errors",
+        errors: {
+          event_location_block: "Please enter an event or location"
+        }
+      });
+    }
 
     try {
       const newAcc = new Accomplishment({
         userId: user_id,
         taggedUser,
         challenge,
+        eventLocation: eventLocation,
       });
       await newAcc.save();
       
@@ -549,9 +670,17 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
       // Only attempt to post messages if channel_id is available
       if (channel_id) {
         // Post accomplishment message
+        let accomplishmentText = `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}`;
+        
+        // Add event/location if provided
+        if (eventLocation && eventLocation.trim() !== '') {
+          accomplishmentText += ` at ${eventLocation}`;
+        }
+        accomplishmentText += "!";
+        
         await slackClient.chat.postMessage({
           channel: channel_id,
-          text: `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}!`,
+          text: accomplishmentText,
         });
         
         // If bingo achieved, update record and post celebration message
