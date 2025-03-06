@@ -693,11 +693,11 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
 
           await slackClient.chat.postMessage({
             channel: channel_id,
-            text: `🎉 *BINGO!* 🎉 <@${user_id}> has completed a line! View their card here: ${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/card?token=${generateToken(user_id)}`,
+            text: `🎉 *HOWLO!* 🎉 <@${user_id}> has completed a line! View their card here: ${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/card?token=${generateToken(user_id)}`,
           });
         }
       }
-      console.log('test')
+
       // Return a clear response to close the modal
       return res.status(200).json({ response_action: "clear" });
     } catch (error) {
