@@ -705,13 +705,21 @@ app.post('/slack/commands', async (req, res) => {
               },
               options: bingoCard
                 .filter(challenge => challenge !== "FREE")
-                .map(challenge => ({
-                  text: {
-                    type: "plain_text",
-                    text: challenge
-                  },
-                  value: challenge
-                }))
+                .map(challenge => {
+                  // Strip HTML tags for dropdown and truncate if needed
+                  let cleanText = challenge.replace(/<\/?strong>/g, '');
+                  // Ensure text is under 75 chars for Slack's limits
+                  if (cleanText.length > 75) {
+                    cleanText = cleanText.substring(0, 72) + '...';
+                  }
+                  return {
+                    text: {
+                      type: "plain_text",
+                      text: cleanText
+                    },
+                    value: challenge
+                  };
+                })
             }
           },
           {
@@ -872,12 +880,15 @@ app.post('/slack/interactions', bodyParser.urlencoded({ extended: true }), async
 
       // Only attempt to post messages if channel_id is available
       if (channel_id) {
+        // Remove HTML tags from challenge text for the message
+        const cleanChallenge = challenge.replace(/<\/?strong>/g, '');
+        
         // Post accomplishment message
-        let accomplishmentText = `Accomplishment recorded for <@${user_id}>: "${challenge}" with ${taggedUser}`;
+        let accomplishmentText = `Accomplishment recorded for <@${user_id}>: *"${cleanChallenge}"* with *${taggedUser}*`;
         
         // Add event/location if provided
         if (eventLocation && eventLocation.trim() !== '') {
-          accomplishmentText += ` at ${eventLocation}`;
+          accomplishmentText += ` at *${eventLocation}*`;
         }
         accomplishmentText += "!";
         
