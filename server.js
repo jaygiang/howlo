@@ -595,6 +595,77 @@ app.post('/slack/commands', async (req, res) => {
       console.error('Error posting card link:', error);
       return res.status(500).send('Error posting card link');
     }
+  } else if (trimmedText.toLowerCase() === 'rules') {
+    // New 'rules' command that displays the game rules in markdown format
+    try {
+      const rulesMarkdown = `
+
+      *How to Play HOWLO*
+      
+      Hey Social Coyotes! 🤝🐺
+      We're launching *HOWLO BINGO*—a fun way to meet new pack members at San Diego tech events!
+      
+      *🎮 How to Play:*
+        • Type \`/howlo\` in @howlo channel to record your first challenge and get started  
+        • Use \`/howlo rules\` to review commands and game details  
+        • Log a challenge with \`/howlo\`  
+        • See the blank howlo card with with \`/howlo card\` 
+        • Check your progress with \`/howlo progress\`  
+        • View the leaderboard with \`/howlo leaderboard\`  
+      
+      *🏆 Challenges:*
+      Each challenge asks you to connect with someone new in a meaningful way:
+        - "Share a personal story"
+        - "Find someone with a shared hobby"
+        - "Schedule a follow-up coffee chat" ☕
+      
+      *✅ Logging a Challenge:*
+        1. Type \`/howlo\` in this Slack channel  
+        2. Select your completed challenge  
+        3. Tag the person you connected with (they may not be pinged)  
+        4. Input the event location  
+      
+      *📊 Viewing Your HOWLO Board:*
+        - Use \`/howlo progress\`  
+        - Click the link provided to see your current card  
+      
+      *🎯 Getting a BINGO:*
+      You know how BINGO works, right? If not:
+        - Complete a row of 5, a column of 5, or a diagonal of 5
+        - Let out a victory HOWL! 🐺  
+      
+      *🏅 Get Competitive!*
+        - Use \`/howlo leaderboard\` to see the top coyotes 🏆  
+      
+      *🔕 Too Many Notifications?*
+        - Right-click on this channel > *"Change notifications"*
+        - Select *"Only @mentions and keywords"*
+        - Or mute it completely with **"Nothing"*
+      
+      *🖨️ Analog Option:*
+      - Print your HOWLO card and bring it to events!  
+      - Nothing says "I'm here to connect!" like pulling out a physical bingo card and asking someone to initial a square. The confused looks are half the fun! 🤣 
+      
+      ---
+      
+      So what are you waiting for? The pack that plays together, stays together!  
+      Let's make some noise and build our community one HOWL YEAH at a time! 🐺  
+      
+      Share all feedback, ideas, notes, and growls with @jonah and @Jay
+      `;
+      
+      
+      await slackClient.chat.postEphemeral({
+        channel: channel_id,
+        user: user_id,
+        text: rulesMarkdown,
+        mrkdwn: true
+      });
+      return res.status(200).send();
+    } catch (error) {
+      console.error('Error posting rules:', error);
+      return res.status(500).send('Error posting rules');
+    }
   }
 
   // Open modal for new accomplishment
