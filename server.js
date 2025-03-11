@@ -66,31 +66,31 @@ const slackClient = new WebClient(slackToken);
 
 // Define a fixed bingo card layout (25 items, center is "FREE")
 const bingoCard = [
-  "Introduce two people who haven't met yet",
-  "Schedule a follow-up coffee chat",
-  "Find someone with a shared hobby and plan to do it together",
-  "Share a personal story (non-work related)",
-  "Send a message to someone you just met",
-  "Ask someone about their favorite local spot",
-  "Find someone who grew up in a different region",
-  "Exchange a book, podcast, or movie recommendation",
-  "Take a selfie with a new connection",
-  "Add a new contact to your phone",
-  "Make a plan to attend another event together",
-  "Ask someone what they're passionate about outside work",
+  "<strong>Find someone who's new to San Diego</strong> (Bonus: Ask what brought them here!)",
+  "<strong>Introduce yourself to someone outside your industry</strong>",
+  "<strong>Meet someone who works remotely</strong> (Bonus: Ask about their favorite workspace!)",
+  "<strong>Find someone looking for a co-founder or collaborator</strong> (Bonus: Ask about their dream project!)",
+  "<strong>Meet someone who's attended 3+ networking events this month</strong> (They're a super-connector!)",
+  "<strong>Find someone who moved here for a job or startup</strong> (What's their story?)",
+  "<strong>Thank the event organizer</strong> (Do it in person or via social media)",
+  "<strong>Post a photo with the event organizer thanking them</strong> (Bonus: Tag them and The Social Coyote!)",
+  "<strong>Make 2 intros between people who haven't met before</strong> (Be the connection hero!)",
+  "<strong>Snap a photo with someone you just met</strong> (Bonus: Post it on LinkedIn or Slack)",
+  "<strong>Ask someone what their biggest 2025 goal is</strong> (Listen, then offer support!)",
+  "<strong>Share a favorite local coffee shop or co-working spot with someone</strong>",
   "FREE", // Center spot is always marked as done
-  "Invite someone to join you for a meal or coffee",
-  "Find someone who enjoys the same music and swap playlists",
-  "Talk about a personal goal you're working on",
-  "Share something meaningful you've learned recently",
-  "Discover a unique talent of someone you just met",
-  "Talk about a childhood dream",
-  "Find someone who's made a career pivot and learn their story",
-  "Ask someone how they unwind and recharge",
-  "Discuss your favorite way to give back to the community",
-  "Find someone who recently traveled somewhere interesting",
-  "Plan to check in with a new connection in a month",
-  "Share a local secret spot"
+  "<strong>Ask someone about the best event they've attended this year</strong> (Why was it great?)",
+  "<strong>Go to an event you haven't been to before</strong>",
+  "<strong>Go to an event in a new part of town you haven't explored</strong>",
+  "<strong>Ask someone for their best networking tip</strong> (Write it down and share later!)",
+  "<strong>Find someone who has launched a startup</strong> (Bonus: Ask what stage they're at)",
+  "<strong>Find someone who has raised funding for their business</strong> (Bonus: Ask about their biggest lesson)",
+  "<strong>Find someone who bootstrapped their business</strong> (Bonus: Ask about a key challenge they overcame)",
+  "<strong>Schedule a follow-up meeting with someone you met</strong> (Coffee, Zoom, or a walk!)",
+  "<strong>Find another Social Coyote in the wild</strong> (Meet another event regular!)",
+  "<strong>Howl or say \"Ahwoo!\" at another Social Coyote</strong> (Bonus: Get them to howl back!)",
+  "<strong>Wildcard: Come up with your own networking challenge and complete it!</strong>",
+  "<strong>Attend 3 events</strong> (Track your progress and keep the streak alive!)"
 ];
 
 app.get('/', (req, res) => {
@@ -392,12 +392,129 @@ app.get('/bingo/card', async (req, res) => {
   }
 });
 
+// GET route to display just a blank bingo card with challenges (no accomplishments)
+// Example: GET /bingo/blank-card?token=TOKEN
+app.get('/bingo/blank-card', async (req, res) => {
+  const token = req.query.token;
+  if (!token) {
+    return res.status(400).send("Missing token parameter.");
+  }
+  
+  const userId = validateToken(token);
+  if (!userId) {
+    return res.status(401).send("Invalid or expired token.");
+  }
+  try {
+    // Get user info from Slack
+    const userInfo = await slackClient.users.info({ user: userId });
+    const userName = userInfo.user.real_name; // Get full name
+    
+    // Build a simple HTML table representing a 5x5 bingo card (blank)
+    let html = `<html>
+      <head>
+        <title>HOWLO Bingo Card</title>     
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+        <style>
+          body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+          }
+          table { 
+            border-collapse: separate; 
+            border-spacing: 12px;
+            margin: 40px auto;
+            max-width: 1200px;
+          }
+          tr {
+            height: 150px;
+          }
+          td { 
+            border-radius: 12px;
+            width: 180px;
+            height: 200px;
+            text-align: center;
+            vertical-align: middle;
+            padding: 15px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+          }
+          td:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+          }
+          .free-cell {
+            background-color: #D3D3D3;
+            border: 2px solid gray;
+            position: relative;
+          }
+          @media (max-width: 768px) {
+            .td-content {
+              position: relative;
+              z-index: 3;
+            }
+            td {
+              cursor: pointer;
+              -webkit-tap-highlight-color: transparent;
+            }
+          }
+          h1 {
+            color: #000000;
+            font-weight: 600;
+            margin: 40px 0;
+          }
+        </style>
+      </head>
+      <body style="margin-top: 35px;">
+        <h2 style="text-align: center;">HOWLO Bingo Challenge</h2>
+        <table style="margin-bottom: 0; border-spacing: 12px;">
+          <tr>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">H</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">O</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">W</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">L</td>
+            <td style="background: none; box-shadow: none; font-size: 100px; font-weight: bold; width: 180px;">O</td>
+          </tr>
+        </table>
+        <table style="margin-top: 0;">`;
+
+    for (let row = 0; row < 5; row++) {
+      html += `<tr>`;
+      for (let col = 0; col < 5; col++) {
+        const index = row * 5 + col;
+        const challenge = bingoCard[index];
+        const isFree = (challenge === "FREE");
+        
+        html += `<td class="${isFree ? 'free-cell' : ''}">
+                  <div class="td-content">
+                    <div>${challenge}</div>
+                    ${isFree ? `<div style="color: #2e7d32; font-size: 24px; margin: 8px 0;">✓</div>` : ''}
+                  </div>
+                 </td>`;
+      }
+      html += `</tr>`;
+    }
+    html += `</table>
+    </body></html>`;
+    
+    res.send(html);
+  } catch (err) {
+    console.error('Error generating blank bingo card:', err);
+    res.status(500).send("Error generating blank bingo card.");
+  }
+});
+
 // Slash command endpoint for /bingo
 app.post('/slack/commands', async (req, res) => {
   const { user_id, text, channel_id, trigger_id } = req.body;
   const trimmedText = text.trim();
 
-  // Handle progress or leaderboard commands
+  // Handle progress, leaderboard, or card commands
   if (trimmedText.toLowerCase() === 'leaderboard') {
     try {
       // Get all accomplishments with bingos
@@ -462,6 +579,21 @@ app.post('/slack/commands', async (req, res) => {
     } catch (error) {
       console.error('Error posting progress message:', error);
       return res.status(500).send('Error posting progress message');
+    }
+  } else if (trimmedText.toLowerCase() === 'card') {
+    // New 'card' command that shows just the link to view the blank bingo card
+    const token = generateToken(user_id);
+    const cardUrl = `${process.env.APP_BASE_URL || 'https://your-app.herokuapp.com'}/bingo/blank-card?token=${token}`;
+    try {
+      await slackClient.chat.postEphemeral({
+        channel: channel_id,
+        user: user_id,
+        text: `${cardUrl}`,
+      });
+      return res.status(200).send();
+    } catch (error) {
+      console.error('Error posting card link:', error);
+      return res.status(500).send('Error posting card link');
     }
   }
 
