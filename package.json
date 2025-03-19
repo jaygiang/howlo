@@ -21,9 +21,12 @@
     "@slack/web-api": "^7.8.0",
     "@vercel/analytics": "^1.5.0",
     "body-parser": "^1.20.3",
+    "chrome-aws-lambda": "^6.0.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "mongoose": "^8.11.0"
+    "mongoose": "^8.11.0",
+    "puppeteer-core": "^6.0.0",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
