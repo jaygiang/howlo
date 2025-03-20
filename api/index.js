@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { connectToMongoDB } from '../lib/db.js';
 import { bingoRoutes } from '../lib/routes/bingo.js';
 import { slackRoutes } from '../lib/routes/slack.js';
+import { checkMonthTransition } from '../lib/utils/monthlyTransition.js';
 
 // Load environment variables
 dotenv.config();
@@ -48,13 +49,33 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
 // Export for Vercel
 export default app;
+
+// Check for month transition on server start
+checkMonthTransition().catch(err => {
+  console.error('Error during month transition check:', err);
+});
+
+// Set up a daily scheduled check for month transition using a simple interval
+// In production, you would use a proper cron/scheduler like node-cron or a cloud scheduler
+setInterval(async () => {
+  try {
+    // Get current date
+    const now = new Date();
+    // If it's midnight (or close to it), run the month transition check
+    if (now.getHours() === 0 && now.getMinutes() < 5) {
+      console.log('Running scheduled month transition check...');
+      await checkMonthTransition();
+    }
+  } catch (error) {
+    console.error('Error in scheduled month transition check:', error);
+  }
+}, 5 * 60 * 1000); // Check every 5 minutes
 
 // Only listen on a port when running directly (not when imported by Vercel)
 if (process.env.NODE_ENV !== 'production') {
