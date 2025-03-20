@@ -34,6 +34,8 @@ app.get('/', (req, res) => {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>HOWLO Bingo</title>
+      <link rel="icon" type="image/png" href="/images/coyote.png">
+      <link rel="apple-touch-icon" href="/images/coyote.png">
       <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
     </head>
     <body>
