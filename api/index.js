@@ -37,10 +37,68 @@ app.get('/', (req, res) => {
       <link rel="icon" type="image/png" href="/images/coyote.png">
       <link rel="apple-touch-icon" href="/images/coyote.png">
       <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+      <style>
+        body {
+          font-family: sans-serif;
+          margin: 0;
+          padding: 20px;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+        main {
+          flex: 1;
+        }
+        footer {
+          margin-top: 50px;
+          padding: 15px;
+          background-color: #000;
+          color: #fff;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+          box-sizing: border-box;
+          margin-left: -20px;
+          margin-right: -20px;
+          width: calc(100% + 40px);
+        }
+        .footer-left {
+          flex: 1;
+        }
+        .footer-center {
+          flex: 2;
+          text-align: center;
+        }
+        .footer-right {
+          flex: 1;
+          text-align: right;
+          padding-right: 20px;
+          font-size: 12px;
+        }
+        footer a {
+          color: #e52b2b;
+          text-decoration: none;
+        }
+        footer a:hover {
+          text-decoration: underline;
+        }
+      </style>
     </head>
     <body>
-      <h1>HOWLO Bingo Server is running!</h1>
-      <p>Use the Slack app to interact with the bingo game.</p>
+      <main>
+        <h1>HOWLO Bingo Server is running!</h1>
+        <p>Use the Slack app to interact with the bingo game.</p>
+      </main>
+      <footer>
+        <div class="footer-left"></div>
+        <div class="footer-center">
+          <a href="https://howl.thesocialcoyote.com/subscribe?ref=MsUtC8osC1&_bhlid=7fecfad9eb7fd8bcdb529e945e11346b5897acdc" target="_blank">Join the pack</a>
+        </div>
+        <div class="footer-right">
+          Created by <a href="https://github.com/jaygiang/" target="_blank">Jay</a>
+        </div>
+      </footer>
     </body>
     </html>
   `);
