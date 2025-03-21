@@ -1,0 +1,5 @@
+# Heroku .slugignore - files to exclude from deployment
+/spec
+/.git
+/.github
+/vercel.json

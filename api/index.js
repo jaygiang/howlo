@@ -137,11 +137,12 @@ setInterval(async () => {
   }
 }, 5 * 60 * 1000); // Check every 5 minutes
 
-// Only listen on a port when running directly (not when imported by Vercel)
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+// Listen on the port provided by Heroku or default to 3000
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`Server available at http://localhost:${PORT}`);
     console.log(`Use ngrok http ${PORT} to expose your server`);
-  });
-}
+  }
+});

@@ -1,0 +1,37 @@
+{
+  "name": "HOWLO Bingo",
+  "description": "A Slack app for networking bingo challenges",
+  "repository": "https://github.com/yourusername/bingo",
+  "keywords": ["node", "express", "slack", "bingo"],
+  "env": {
+    "MONGODB_URI": {
+      "description": "MongoDB connection string",
+      "required": true
+    },
+    "SLACK_BOT_TOKEN": {
+      "description": "Slack bot OAuth token",
+      "required": true
+    },
+    "APP_BASE_URL": {
+      "description": "URL of your application",
+      "required": true
+    },
+    "SECRET_KEY": {
+      "description": "Secret key for token generation",
+      "generator": "secret"
+    },
+    "SLACK_INVITE_CODE": {
+      "description": "Slack channel ID for announcements",
+      "required": true
+    },
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
